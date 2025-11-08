@@ -1,16 +1,16 @@
 {
-    "name": "reactivity",
+    "name": "vue",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
-    "module": "dist/reactivity.esm.js",
+    "main": "dist/vue.cjs.js",
+    "module": "dist/vue.esm.js",
     "files": [
         "dist",
         "index.js"
     ],
     "sideEffects": false,
     "buildOptions": {
-        "name": "Reactivity",
+        "name": "Vue",
         "formats": [
             "cjs",
             "esm-bundler",

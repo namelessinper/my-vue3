@@ -24,12 +24,12 @@ const require = createRequire(import.meta.url)
 
 const target = positionals.length ? positionals[0] : 'vue'
 
-const entry = resolve(__dirname, `../packges/${target}/src/index.ts`)
+const entry = resolve(__dirname, `../packages/${target}/src/index.ts`)
 const outfile = resolve(
   __dirname,
-  `../packges/${target}/dist/${target}.${format}.js`
+  `../packages/${target}/dist/${target}.${format}.js`
 )
-const pkg = require(`../packges/${target}/package.json`)
+const pkg = require(`../packages/${target}/package.json`)
 console.log(pkg)
 esbuild
   .context({
