@@ -1,7 +1,8 @@
+import { ReactiveEffect } from './effect'
 import { RefImpl } from './ref'
 
 export interface Link {
-  sub: Function
+  sub: ReactiveEffect
   nextSub: Link | undefined
   prevSub: Link | undefined
 }
@@ -12,10 +13,10 @@ export function propagate(subs: Link) {
     queuedEffect.push(link.sub)
     link = link.nextSub
   }
-  queuedEffect.forEach(effect => effect())
+  queuedEffect.forEach(effect => effect.notify())
 }
 
-export function link(dep: RefImpl, sub: Function) {
+export function link(dep: RefImpl, sub: ReactiveEffect) {
   const newLink: Link = {
     sub,
     nextSub: undefined,

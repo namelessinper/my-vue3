@@ -1,9 +1,32 @@
 // packages/reactivity/src/effect.ts
 var activeSub;
-function effect(fn) {
-  activeSub = fn;
-  activeSub();
-  activeSub = void 0;
+var ReactiveEffect = class {
+  constructor(fn) {
+    this.fn = fn;
+  }
+  run() {
+    const prevSub = activeSub;
+    activeSub = this;
+    try {
+      return this.fn();
+    } finally {
+      activeSub = prevSub;
+    }
+  }
+  scheduler() {
+    this.run();
+  }
+  notify() {
+    this.scheduler();
+  }
+};
+function effect(fn, options) {
+  const e = new ReactiveEffect(fn);
+  Object.assign(e, options);
+  e.run();
+  const runner = () => e.run();
+  runner.effect = e;
+  return runner;
 }
 
 // packages/reactivity/src/system.ts
@@ -14,7 +37,7 @@ function propagate(subs) {
     queuedEffect.push(link2.sub);
     link2 = link2.nextSub;
   }
-  queuedEffect.forEach((effect2) => effect2());
+  queuedEffect.forEach((effect2) => effect2.notify());
 }
 function link(dep, sub) {
   const newLink = {
@@ -67,6 +90,7 @@ function trigerRef(dep) {
   }
 }
 export {
+  ReactiveEffect,
   RefImpl,
   activeSub,
   effect,
