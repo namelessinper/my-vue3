@@ -1,10 +1,16 @@
+import { Link } from './system'
+
 export let activeSub
 
 export class ReactiveEffect {
+  deps: Link | undefined
+  depsTail: Link | undefined
+
   constructor(public fn: Function) {}
   run() {
     const prevSub = activeSub
     activeSub = this
+    this.depsTail = undefined
     try {
       return this.fn()
     } finally {
@@ -21,6 +27,7 @@ export class ReactiveEffect {
 }
 
 export function effect(fn: Function, options?: any) {
+  debugger
   const e = new ReactiveEffect(fn)
   Object.assign(e, options)
   e.run()

@@ -4,9 +4,12 @@ var ReactiveEffect = class {
   constructor(fn) {
     this.fn = fn;
   }
+  deps;
+  depsTail;
   run() {
     const prevSub = activeSub;
     activeSub = this;
+    this.depsTail = void 0;
     try {
       return this.fn();
     } finally {
@@ -21,6 +24,7 @@ var ReactiveEffect = class {
   }
 };
 function effect(fn, options) {
+  debugger;
   const e = new ReactiveEffect(fn);
   Object.assign(e, options);
   e.run();
@@ -40,8 +44,15 @@ function propagate(subs) {
   queuedEffect.forEach((effect2) => effect2.notify());
 }
 function link(dep, sub) {
+  const nextDep = sub.depsTail === void 0 ? sub.deps : sub.depsTail.nextDep;
+  if (nextDep && nextDep.dep === dep) {
+    sub.depsTail = nextDep;
+    return;
+  }
   const newLink = {
     sub,
+    dep,
+    nextDep: void 0,
     nextSub: void 0,
     prevSub: void 0
   };
@@ -52,6 +63,13 @@ function link(dep, sub) {
     dep.subsTail.nextSub = newLink;
     newLink.prevSub = dep.subsTail;
     dep.subsTail = newLink;
+  }
+  if (sub.depsTail) {
+    sub.depsTail.nextDep = newLink;
+    sub.depsTail = newLink;
+  } else {
+    sub.deps = newLink;
+    sub.depsTail = newLink;
   }
 }
 
@@ -65,10 +83,14 @@ var RefImpl = class {
     this._value = value;
   }
   get value() {
+    console.log("get value of ref");
+    debugger;
     trackRef(this);
     return this._value;
   }
   set value(newValue) {
+    console.log("set value of ref");
+    debugger;
     this._value = newValue;
     trigerRef(this);
   }

@@ -30,7 +30,6 @@ const outfile = resolve(
   `../packages/${target}/dist/${target}.${format}.js`
 )
 const pkg = require(`../packages/${target}/package.json`)
-console.log(pkg)
 esbuild
   .context({
     entryPoints: [entry],
