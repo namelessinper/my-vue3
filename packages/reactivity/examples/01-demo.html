@@ -2,35 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Title</title>
+    <style>
+      body {
+        padding: 150px;
+      }
+    </style>
   </head>
   <body>
-    <button id="btn" @click="btnClick">按钮</button>
+    <div id="app"></div>
+    <button id="flagBtn">update flag</button>
+    <button id="nameBtn">update name</button>
+    <button id="ageBtn">update age</button>
     <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
       import { ref, effect } from '../dist/reactivity.esm.js'
 
-      const count = ref(0)
       const flag = ref(true)
-
+      const name = ref('远方os')
+      const age = ref(18)
+      const count = ref(0)
       effect(() => {
-        console.log(`effect1 count is: ${count.value} ${flag.value}`)
+        console.count('effect run', count.value++)
       })
-      const btnClick = async () => {
-        const opts = {
-          type: 'save-file',
-          accepts: [
-            {
-              description: 'Text file',
-              extensions: ['txt'],
-              mimeTypes: ['text/plain'],
-            },
-          ],
-        }
-        // 新建文件的句柄
-        const fileHandle = await window.chooseFileSystemEntries(opts)
+
+      flagBtn.onclick = () => {
+        flag.value = !flag.value
       }
-      document.getElementById('btn').onclick = btnClick
+
+      nameBtn.onclick = () => {
+        name.value = name.value + Math.random()
+      }
+
+      ageBtn.onclick = () => {
+        age.value++
+      }
     </script>
   </body>
 </html>

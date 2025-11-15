@@ -1,19 +1,20 @@
-import { Link } from './system'
+import { endTrack, Link, startTrack } from './system'
 
 export let activeSub
 
 export class ReactiveEffect {
   deps: Link | undefined
   depsTail: Link | undefined
-
+  tracking = false
   constructor(public fn: Function) {}
   run() {
     const prevSub = activeSub
     activeSub = this
-    this.depsTail = undefined
+    startTrack(this)
     try {
       return this.fn()
     } finally {
+      endTrack(this)
       activeSub = prevSub
     }
   }
@@ -27,7 +28,6 @@ export class ReactiveEffect {
 }
 
 export function effect(fn: Function, options?: any) {
-  debugger
   const e = new ReactiveEffect(fn)
   Object.assign(e, options)
   e.run()

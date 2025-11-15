@@ -17,17 +17,12 @@ export class RefImpl {
   }
 
   get value() {
-    console.log('get value of ref')
-    debugger
-
     trackRef(this)
 
     return this._value
   }
 
   set value(newValue: any) {
-    console.log('set value of ref')
-    debugger
     this._value = newValue
     trigerRef(this)
   }

@@ -1,44 +1,13 @@
-// packages/reactivity/src/effect.ts
-var activeSub;
-var ReactiveEffect = class {
-  constructor(fn) {
-    this.fn = fn;
-  }
-  deps;
-  depsTail;
-  run() {
-    const prevSub = activeSub;
-    activeSub = this;
-    this.depsTail = void 0;
-    try {
-      return this.fn();
-    } finally {
-      activeSub = prevSub;
-    }
-  }
-  scheduler() {
-    this.run();
-  }
-  notify() {
-    this.scheduler();
-  }
-};
-function effect(fn, options) {
-  debugger;
-  const e = new ReactiveEffect(fn);
-  Object.assign(e, options);
-  e.run();
-  const runner = () => e.run();
-  runner.effect = e;
-  return runner;
-}
-
 // packages/reactivity/src/system.ts
+var linkPool;
 function propagate(subs) {
   let link2 = subs;
   const queuedEffect = [];
   while (link2) {
-    queuedEffect.push(link2.sub);
+    const sub = link2.sub;
+    if (!sub.tracking) {
+      queuedEffect.push(sub);
+    }
     link2 = link2.nextSub;
   }
   queuedEffect.forEach((effect2) => effect2.notify());
@@ -49,13 +18,22 @@ function link(dep, sub) {
     sub.depsTail = nextDep;
     return;
   }
-  const newLink = {
-    sub,
-    dep,
-    nextDep: void 0,
-    nextSub: void 0,
-    prevSub: void 0
-  };
+  let newLink;
+  if (linkPool) {
+    newLink = linkPool;
+    linkPool = linkPool.nextDep;
+    newLink.sub = sub;
+    newLink.dep = dep;
+    newLink.nextDep = nextDep;
+  } else {
+    newLink = {
+      sub,
+      dep,
+      nextDep,
+      nextSub: void 0,
+      prevSub: void 0
+    };
+  }
   if (!dep.subsTail) {
     dep.subs = newLink;
     dep.subsTail = newLink;
@@ -72,6 +50,85 @@ function link(dep, sub) {
     sub.depsTail = newLink;
   }
 }
+function startTrack(sub) {
+  sub.tracking = true;
+  sub.depsTail = void 0;
+}
+function endTrack(sub) {
+  sub.tracking = false;
+  const depsTail = sub.depsTail;
+  if (depsTail) {
+    if (depsTail.nextDep) {
+      clearTracking(depsTail.nextDep);
+      depsTail.nextDep = void 0;
+    }
+  } else if (sub.deps) {
+    clearTracking(sub.deps);
+    sub.deps = void 0;
+  }
+}
+function clearTracking(link2) {
+  while (link2) {
+    const { prevSub, nextSub, nextDep, dep } = link2;
+    debugger;
+    if (prevSub) {
+      prevSub.nextSub = nextSub;
+      link2.nextSub = void 0;
+    } else {
+      if (dep) {
+        dep.subs = nextSub;
+      }
+    }
+    if (nextSub) {
+      nextSub.prevSub = prevSub;
+      link2.prevSub = void 0;
+    } else {
+      if (dep) {
+        dep.subsTail = prevSub;
+      }
+    }
+    link2.dep = link2.sub = void 0;
+    link2.nextDep = linkPool;
+    linkPool = link2;
+    link2 = nextDep;
+  }
+}
+
+// packages/reactivity/src/effect.ts
+var activeSub;
+var ReactiveEffect = class {
+  constructor(fn) {
+    this.fn = fn;
+  }
+  deps;
+  depsTail;
+  tracking = false;
+  run() {
+    const prevSub = activeSub;
+    activeSub = this;
+    startTrack(this);
+    try {
+      return this.fn();
+    } finally {
+      endTrack(this);
+      activeSub = prevSub;
+    }
+  }
+  scheduler() {
+    this.run();
+  }
+  notify() {
+    this.scheduler();
+  }
+};
+function effect(fn, options) {
+  const e = new ReactiveEffect(fn);
+  Object.assign(e, options);
+  e.run();
+  const runner = () => e.run();
+  runner.effect = e;
+  return runner;
+}
 
 // packages/reactivity/src/ref.ts
 var RefImpl = class {
@@ -83,14 +140,10 @@ var RefImpl = class {
     this._value = value;
   }
   get value() {
-    console.log("get value of ref");
-    debugger;
     trackRef(this);
     return this._value;
   }
   set value(newValue) {
-    console.log("set value of ref");
-    debugger;
     this._value = newValue;
     trigerRef(this);
   }
