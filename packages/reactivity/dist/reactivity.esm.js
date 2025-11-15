@@ -164,12 +164,34 @@ function trigerRef(dep) {
     propagate(dep.subs);
   }
 }
+
+// packages/shared/src/index.ts
+function isObject(value) {
+  return value !== null && typeof value === "object";
+}
+
+// packages/reactivity/src/reactive.ts
+function reactive(target) {
+  return createReactiveObject(target);
+}
+function createReactiveObject(target) {
+  if (!isObject(target)) {
+    return target;
+  }
+  const proxy = new Proxy(target, {
+    get(target2, key, receiver) {
+    },
+    set(target2, key, value, receiver) {
+    }
+  });
+}
 export {
   ReactiveEffect,
   RefImpl,
   activeSub,
   effect,
   isRef,
+  reactive,
   ref,
   trackRef,
   trigerRef
